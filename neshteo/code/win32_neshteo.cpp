@@ -104,7 +104,59 @@ Win32MainWindowCallBack(HWND Window,
       {
 	GlobalRunning = false;
       }break;
-      
+    case WM_SYSKEYUP:
+    case WM_SYSKEYDOWN:
+    case WM_KEYDOWN:
+    case WM_KEYUP:
+      {
+	uint8 VKCode = WParam;
+	bool IsDown = ((LParam & (1 << 30)) == 0);
+	bool WasDown = ((LParam & (1 << 31)) != 0);
+	if(WasDown != IsDown)
+	  {
+	    if(VKCode == 'W')
+	      {
+	      }
+	    else if(VKCode == 'S')
+	      {
+	      }
+	    else if(VKCode == 'A')
+	      {
+	      }
+	    else if(VKCode == 'D')
+	      {
+	      }
+	    else if(VKCode == 'Q')
+	      {
+	      }
+	    else if(VKCode == 'E')
+	      {
+	      }
+	    else if(VKCode == VK_SPACE)
+	      {
+	      }
+	    else if(VKCode == VK_ESCAPE)
+	      {
+		OutputDebugStringA("Escape:");
+		if(IsDown)
+		  {
+		    OutputDebugStringA("IsDown");
+		  }
+		if(WasDown)
+		  {
+		    OutputDebugStringA("WasDown");
+		  }
+		OutputDebugStringA("\n");
+	      }
+	  }
+
+	int32 AltKeyWasDown = LParam & (1 << 29) != 0;
+	if(VKCode == VK_F4 && AltKeyWasDown)
+	  {
+	    OutputDebugStringA("\t\nAltKeyWasDown");
+	    GlobalRunning = false;
+	  }
+      }break;
     case WM_PAINT:
       {
 	PAINTSTRUCT Paint;
