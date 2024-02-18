@@ -15,6 +15,9 @@ typedef uint16_t uint16;
 typedef uint32_t uint32;
 typedef uint64_t uint64;
 
+#include "neshteo.h"
+#include "neshteo.cpp"
+
 struct win32_offscreen_buffer
 {
   BITMAPINFO Info;
@@ -203,6 +206,8 @@ WinMain(HINSTANCE Instance,
 
       if(Window)
 	{
+	  int XOffset = 0;
+	  int YOffset = 0;
 	  HDC DeviceContext = GetDC(Window);
 	  GlobalRunning = true;
 	  while(GlobalRunning)
@@ -217,9 +222,17 @@ WinMain(HINSTANCE Instance,
 		  TranslateMessage(&Message);
 		  DispatchMessageA(&Message);
 		}
-
+	      game_offscreen_buffer Buffer = {};
+	      Buffer.Memory = GlobalBackBuffer.Memory;
+	      Buffer.Width = GlobalBackBuffer.Width;
+	      Buffer.Height = GlobalBackBuffer.Height;
+	      Buffer.Pitch = GlobalBackBuffer.Pitch;
+	      GameUpdateAndRender(&Buffer, XOffset, YOffset);
+	      
 	      win32_window_dimension Dimension = Win32GetWindowDimension(Window);
 	      Win32GetBufferInWindow(&GlobalBackBuffer, DeviceContext, Dimension.Width, Dimension.Height);
+
+	      XOffset++;
 	    }
 	}
       else
