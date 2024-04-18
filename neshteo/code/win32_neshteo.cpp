@@ -1,7 +1,7 @@
-
 #include <windows.h>
 #include <stdint.h>
 #include <xinput.h>
+#include<stdio.h>
 #include <dsound.h>
 
 // TODO(mehmet): Implement sine ourselves
@@ -472,6 +472,10 @@ WinMain(HINSTANCE Instance,
 //    WindowClass.hIcon;
     WindowClass.lpszClassName = "HandmadeHeroWindowClass";
 
+    LARGE_INTEGER PerfCountFrequencyResult;
+    QueryPerformanceFrequency(&PerfCountFrequencyResult);
+    int64 PerfCountFrequency = PerfCountFrequencyResult.QuadPart;
+    
     if(RegisterClassA(&WindowClass))
     {
         HWND Window =
@@ -512,31 +516,37 @@ WinMain(HINSTANCE Instance,
             Win32InitDSound(Window, SoundOutput.SamplesPerSecond, SoundOutput.SecondaryBufferSize);
             Win32FillSoundBuffer(&SoundOutput, 0, SoundOutput.LatencySampleCount*SoundOutput.BytesPerSample);
             GlobalSecondaryBuffer->Play(0, 0, DSBPLAY_LOOPING);
-                            
-            GlobalRunning = true;
-            while(GlobalRunning)
-            {
-                MSG Message;
 
+	    
+	    
+            GlobalRunning = true;
+
+	    LARGE_INTEGER LastCounter;
+	    int64 LastCycleCount = __rdtsc();
+	    QueryPerformanceCounter(&LastCounter);
+	    
+            while(GlobalRunning)
+	      {
+                MSG Message;
                 while(PeekMessage(&Message, 0, 0, 0, PM_REMOVE))
-                {
+		  {
                     if(Message.message == WM_QUIT)
-                    {
+		      {
                         GlobalRunning = false;
-                    }
+		      }
                     
                     TranslateMessage(&Message);
                     DispatchMessageA(&Message);
-                }
-
+		  }
+		
                 // TODO(mehmet): Should we poll this more frequently
                 for (DWORD ControllerIndex = 0;
                      ControllerIndex < XUSER_MAX_COUNT;
                      ++ControllerIndex)
-                {
+		  {
                     XINPUT_STATE ControllerState;
                     if(XInputGetState(ControllerIndex, &ControllerState) == ERROR_SUCCESS)
-                    {
+		      {
                         // NOTE(mehmet): This controller is plugged in
                         // TODO(mehmet): See if ControllerState.dwPacketNumber increments too rapidly
                         XINPUT_GAMEPAD *Pad = &ControllerState.Gamepad;
@@ -606,6 +616,23 @@ WinMain(HINSTANCE Instance,
                 win32_window_dimension Dimension = Win32GetWindowDimension(Window);
                 Win32DisplayBufferInWindow(&GlobalBackbuffer, DeviceContext,
                                            Dimension.Width, Dimension.Height);
+
+		LARGE_INTEGER EndCounter;
+		int64 EndCycleCount = __rdtsc();
+		QueryPerformanceCounter(&EndCounter);
+
+		int64 CyclesElapsed = EndCycleCount - LastCycleCount;
+		int64 CounterElapsed = EndCounter.QuadPart - LastCounter.QuadPart;
+		real32 MSPerFrame = ((real32)(1000*CounterElapsed)) / ((real32)(PerfCountFrequency));
+		real32 FPS = ((real32)(PerfCountFrequency)) / ((real32)(CounterElapsed));
+		real32 MCPF = ((real32)(CyclesElapsed)) / (1000*1000);
+
+		char Buffer[256];
+		sprintf(Buffer, "%fms/f, %ff/s, %fmc/f\n", MSPerFrame, FPS, MCPF);
+		OutputDebugString(Buffer);
+		
+		LastCounter = EndCounter;
+		LastCycleCount = EndCycleCount;
             }
         }
         else
