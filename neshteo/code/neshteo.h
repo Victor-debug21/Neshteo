@@ -14,6 +14,27 @@
 
 #define ArrayCount(Array)(sizeof(Array) / sizeof((Array)[0]))
 
+inline uint32
+SafeTruncateUInt64(uint64 Value)
+{
+  Assert(Value <= 0xFFFFFFFF);
+  uint32 Result = (uint32)Value;
+  return(Result);
+}
+
+#if HANDMADE_INTERNAL
+
+struct debug_read_file_result
+{
+  uint32 ContentsSize;
+  void *Contents;
+};
+
+internal debug_read_file_result DEBUGPlatformReadEntireFile(char *Filename);
+internal void DEBUGPlatformFreeFileMemory(void *Memory);
+internal bool32 DEBUGPlatformWriteEntireFile(char *Filename, uint32 MemorySize, void *Memory);
+#endif
+
 struct game_offscreen_buffer
 {
   void *Memory;
@@ -37,39 +58,49 @@ struct game_button_state
 
 struct game_controller_input
 {
+  bool32 IsConnected;
   bool32 IsAnalog;
-
-  real32 StartX;
-  real32 StartY;
-
-  real32 MinX;
-  real32 MinY;
-
-  real32 MaxX;
-  real32 MaxY;
-
-  real32 EndX;
-  real32 EndY;
+  real32 StickAverageX;
+  real32 StickAverageY;
 
   union
   {
-    game_button_state Buttons[6];
+    game_button_state Buttons[12];
     struct
     {
-      game_button_state Up;
-      game_button_state Down;
-      game_button_state Left;
-      game_button_state Right;
+      game_button_state MoveUp;
+      game_button_state MoveDown;
+      game_button_state MoveLeft;
+      game_button_state MoveRight;
+
+      game_button_state ActionUp;
+      game_button_state ActionDown;
+      game_button_state ActionLeft;
+      game_button_state ActionRight;
+
       game_button_state LeftShoulder;
       game_button_state RightShoulder;
+
+      game_button_state Back;
+      game_button_state Start;
+
+      game_button_state Terminator;
     };
   };
 };
 
 struct game_input
 {
-  game_controller_input Controllers[4];
+  game_controller_input Controllers[5];
 };
+
+inline game_controller_input *GetController(game_input *Input, int unsigned ControllerIndex)
+{
+  Assert(ControllerIndex < ArrayCount(Input->Controllers));
+
+  game_controller_input *Result = &Input->Controllers[ControllerIndex];
+  return(Result);
+}
 
 struct game_memory
 {
