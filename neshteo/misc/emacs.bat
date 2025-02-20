@@ -1,2 +1,2 @@
 @echo off
-C:\emacs\bin\runemacs.exe
+"C:\Program Files\Emacs\emacs-29.4\bin\runemacs.exe"
