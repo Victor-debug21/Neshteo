@@ -18,8 +18,6 @@
             (delete-other-windows)  ;; Önce tüm bölmeleri kapat
             (split-window-right)))  ;; Ekraný dikey olarak ikiye böl
 
-(setq magit-diff-refine-hunk 'all)
-
 
 ;;Açýldýðý gibi full screen yapar
 (add-to-list 'default-frame-alist '(fullscreen . fullboth)) ;; Emacs'i tam ekran aç
